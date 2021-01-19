@@ -6,8 +6,9 @@ var logger = require('morgan');
 var sassMiddleware = require('node-sass-middleware');
 const cors = require('cors');
 
-var indexRouter = require('./routes/index');
+const indexRouter = require('./routes/index');
 const apiRouter = require('./routes/api');
+const homeRouter = require('./routes/home');
 var app = express();
 
 // view engine setup
@@ -28,6 +29,8 @@ app.use(cors());
 
 app.use('/', indexRouter);
 app.use('/api', apiRouter);
+app.use('/home', homeRouter);
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

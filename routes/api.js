@@ -3,9 +3,10 @@ const router = express.Router();
 const asyncHandler = require('express-async-handler');
 const crypto = require('crypto');
 const axios = require('axios');
-const spotifyApiWrapper = require('../modules/spotifyApiWrapper.js')
+const spotifyApiWrapper = require('../modules/spotifyApiWrapper.js');
+const SpotifyAPI = require('../modules/spotifyApiWrapper.js');
 
-const scopes = 'playlist-modify-public playlist-modify-private playlist-read-private playlist-read-collaborative user-read-email user-read-private';
+const scopes = 'playlist-modify-public playlist-modify-private playlist-read-private playlist-read-collaborative ugc-image-upload user-read-email user-read-private';
 const stateKey = 'spotify_auth_state';
 
 
@@ -19,7 +20,8 @@ router.get('/login', (req, res, next) => {
                             `response_type=code&`+
                             `redirect_uri=${process.env.REDIRECT_URI}&`+
                             `scope=${encodeURIComponent(scopes)}&`+
-                            `state=${state}`;
+                            `state=${state}&`+
+                            `show_dialog=true`;
     res.redirect(authorization_url)
 })
 
@@ -31,6 +33,7 @@ router.get('/callback', asyncHandler(async (req, res, next) => {
         res.redirect('/');
     } else {
         res.clearCookie(stateKey);
+        
         let authString = Buffer.from(`${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`).toString('base64');
        
         const tokenPromise = axios({
@@ -45,18 +48,41 @@ router.get('/callback', asyncHandler(async (req, res, next) => {
         });
 
         const tokenData = await tokenPromise.then(res => res.data);
-        const accessToken = tokenData.access_token;
-        const spotifyAPI = new spotifyApiWrapper(accessToken);
-        let user = await spotifyAPI.getUser();
-        let playlists = await spotifyAPI.getPlaylists(user.id, []);
-        console.log(playlists);
+        res.cookie('accessToken', tokenData.access_token, {maxAge: 900000, httpOnly: true});
+        res.redirect('/home');
+    }
+}))
 
+router.get('/export', asyncHandler(async (req, res, next) => {
+    const accessToken = req.cookies.accessToken;
+    const spotifyAPI = new spotifyApiWrapper(accessToken);
+    let exportObj = {
+        user_id: '',
+        playlists: [],
+    }
+    let user = await spotifyAPI.getUser();
+    exportObj.user_id = user.id;
+    console.log(user);
 
+    let playlists = await spotifyAPI.getPlaylists(user.id).catch(err => console.log(err));
+    // let playlist = playlists[4];
+    // let tracks = await spotifyAPI.getPlaylistItems(playlist.id, user.country);
+    // res.send(JSON.stringify(tracks));
+    
+    for (let i=0; i<playlists.length; i++) {
+        exportObj.playlists.push({
+            collaborative: playlists[i].collaborative,
+            description: playlists[i].description,
+            imageUrl: await spotifyApi.getPlaylistImage(playlists[i].images[0].url),
+            id: playlists[i].id,
+            name: playlists[i].name,
+            public: playlists[i].public,
+            tracks: await spotifyAPI.getPlaylistItems(playlists[i].id, user.country)
+        })
     }
 
-    if (req.query.error) {res.send('you clicked cancel')}
-    else if (req.query.code) {res.send('you clicked log in')}
-    else res.send('If you see this, I messed up.')
+
+    res.send(JSON.stringify(exportObj));
 }))
 
 module.exports = router;

@@ -15,15 +15,61 @@ class SpotifyAPI {
         }
     }
 
-    async getPlaylists(user_id, playlists) {
-        const limit = 50;
-        let url = `${this.base}/users/${user_id}/playlists?limit=${limit}`;
-
+    async getPlaylists(user_id, totalPlaylists, url) {
+        console.log(`Getting playlists for ${user_id}`);
+        totalPlaylists = totalPlaylists ? totalPlaylists : [];
+        url = url ? url : `${this.base}/users/${user_id}/playlists?limit=${50}`;
         try {
-            return await axios.get(url, {headers: this.authHeader}).then(res => res.data);
+            let playlistData = await axios.get(url, {headers: this.authHeader}).then(res => res.data);
+            totalPlaylists = [...totalPlaylists, ...playlistData.items];
+            if (playlistData.next != null) {
+                console.log('getting more');
+                return this.getPlaylists(user_id, totalPlaylists, playlistData.next);
+            } else {
+                console.log('returning all playlists');
+                return totalPlaylists;
+            }
         } catch (err) {
             console.error(err);
         }
+    }
+
+    async getPlaylistItems(playlist_id, market, totalItems=[], offset=0) {
+        console.log(`Getting playlist items for ${playlist_id} - offset: ${offset} - total: ${totalItems.length}`);
+        const limit = 100;
+        let url = `${this.base}/playlists/${playlist_id}/tracks?market=${market}&limit=${limit}&offset=${offset}&fields=items(added_at,track(uri))`;
+        try {
+            let playlistItems = await axios.get(url, {headers: this.authHeader}).then(res => res.data.items);
+            playlistItems = playlistItems.map(({added_at, track: {uri}}) => ({added_at: added_at, track_uri: uri}))
+            totalItems = [...totalItems, ...playlistItems];
+            if (playlistItems.length !== 0) {
+                return this.getPlaylistItems(playlist_id, market, totalItems, offset+limit);
+            } else {
+                return totalItems;
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async getPlaylistImage(image_url) {
+        try {
+            // let url = `${this.base}/playlists/${playlist_id}/images`;
+            // let images = await axios.get(url, {headers: this.authHeader}).then(res => res.data);
+            let image = await axios.get(images[0].url, {responseType: 'arraybuffer'});
+            let imgBase64String = Buffer.from(image.data).toString('base64');
+            return imgBase64String;
+        } catch(err) {
+            console.error(err);
+        }
+    }
+
+    async createPlaylist(user_id, name, desc, isPublic, isCollaborative) {
+        //check if user_id from generated file matches the current user
+    }
+
+    async uploadPlaylistImage(playlist_id, image) {
+        //IMAGE IS Base64 ENCODED STRING!
     }
 
 }
