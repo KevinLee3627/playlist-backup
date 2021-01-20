@@ -52,17 +52,19 @@ class SpotifyAPI {
         }
     }
 
-    async getPlaylistImage(image_url) {
-        try {
-            // let url = `${this.base}/playlists/${playlist_id}/images`;
-            // let images = await axios.get(url, {headers: this.authHeader}).then(res => res.data);
-            let image = await axios.get(images[0].url, {responseType: 'arraybuffer'});
-            let imgBase64String = Buffer.from(image.data).toString('base64');
-            return imgBase64String;
-        } catch(err) {
-            console.error(err);
-        }
-    }
+    // async getPlaylistImage(image_url) {
+    //     try {
+    //         let image = await axios.get(image_url, {responseType: 'arraybuffer'});
+    //         console.log(image.data.length);
+    //         let imgBase64String = Buffer.from(image.data).toString('base64');
+    //         console.log(imgBase64String.length);
+    //         let utf8String = Buffer.from(image.data).toString('utf8');
+    //         console.log(utf8String.length);
+    //         return imgBase64String;
+    //     } catch(err) {
+    //         console.error(err);
+    //     }
+    // }
 
     async createPlaylist(user_id, name, desc, isPublic, isCollaborative) {
         //check if user_id from generated file matches the current user

@@ -9,8 +9,8 @@
     <h1>{{title}}</h1>
     <p>Welcome to {{title}}</p>
     <button class='button-export'>Export</button>
-    <button>Import</button>
-
+    <input class='file-import' type='file' accept='.json'>
+    <div id='dropbox'></div>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src='scripts/export.js'></script>
     <script src='scripts/import.js'></script>

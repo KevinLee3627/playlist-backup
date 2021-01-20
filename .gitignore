@@ -2,6 +2,6 @@
 *.log
 package-lock.json
 .env
-todo.txt
+TODO
 
 *.code-workspace

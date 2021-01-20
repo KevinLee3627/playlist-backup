@@ -4,7 +4,6 @@ const asyncHandler = require('express-async-handler');
 const crypto = require('crypto');
 const axios = require('axios');
 const spotifyApiWrapper = require('../modules/spotifyApiWrapper.js');
-const SpotifyAPI = require('../modules/spotifyApiWrapper.js');
 
 const scopes = 'playlist-modify-public playlist-modify-private playlist-read-private playlist-read-collaborative ugc-image-upload user-read-email user-read-private';
 const stateKey = 'spotify_auth_state';
@@ -34,7 +33,7 @@ router.get('/callback', asyncHandler(async (req, res, next) => {
     } else {
         res.clearCookie(stateKey);
         
-        let authString = Buffer.from(`${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`).toString('base64');
+        const authString = Buffer.from(`${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`).toString('base64');
        
         const tokenPromise = axios({
             method: 'post',
@@ -60,20 +59,22 @@ router.get('/export', asyncHandler(async (req, res, next) => {
         user_id: '',
         playlists: [],
     }
-    let user = await spotifyAPI.getUser();
+    const user = await spotifyAPI.getUser();
     exportObj.user_id = user.id;
     console.log(user);
+    const playlists = await spotifyAPI.getPlaylists(user.id).catch(err => console.log(err));
 
-    let playlists = await spotifyAPI.getPlaylists(user.id).catch(err => console.log(err));
-    // let playlist = playlists[4];
+    // let playlist = playlists[0];
+    // console.log(playlist);
     // let tracks = await spotifyAPI.getPlaylistItems(playlist.id, user.country);
     // res.send(JSON.stringify(tracks));
+    // let img = await spotifyAPI.getPlaylistImage(playlist.images[0].url);
+    // res.send(img);
     
     for (let i=0; i<playlists.length; i++) {
         exportObj.playlists.push({
             collaborative: playlists[i].collaborative,
             description: playlists[i].description,
-            imageUrl: await spotifyApi.getPlaylistImage(playlists[i].images[0].url),
             id: playlists[i].id,
             name: playlists[i].name,
             public: playlists[i].public,
@@ -81,8 +82,14 @@ router.get('/export', asyncHandler(async (req, res, next) => {
         })
     }
 
-
     res.send(JSON.stringify(exportObj));
+}))
+
+router.post('/import', asyncHandler(async (req, res, next) => {
+    console.log('File uploaded');
+    console.log(Object.keys(req));
+    console.log(req.body);
+
 }))
 
 module.exports = router;
