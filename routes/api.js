@@ -86,10 +86,17 @@ router.get('/export', asyncHandler(async (req, res, next) => {
 }))
 
 router.post('/import', asyncHandler(async (req, res, next) => {
-    console.log('File uploaded');
-    console.log(Object.keys(req));
-    console.log(req.body);
-
+    const accessToken = req.cookies.accessToken;
+    const spotifyAPI = new spotifyApiWrapper(accessToken);
+    const user = await spotifyAPI.getUser();
+    const importObj = JSON.parse(Object.keys(req.body)[0]); //needs express.urlencoded: extended: false!!!
+    
+    for (let i=0; i < importObj.playlists.length; i++) {
+        const playlist = importObj.playlists[i];
+        spotifyAPI.createPlaylist(user.user_id, playlist.name, playlist.description, playlist.public, playlist.collaborative, playlist.tracks);
+    }
+    
+    res.send('Thanks!');
 }))
 
 module.exports = router;

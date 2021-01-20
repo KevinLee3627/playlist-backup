@@ -5,6 +5,9 @@ body {
 a {
   color: #00B7FF; }
 
+input[type='file'] {
+  display: none; }
+
 #dropbox {
   height: 300px;
   width: 300px;

@@ -1,15 +1,17 @@
-function validatePlaylistData(files) {
-  console.log(files);
-  axios.post('/api/import', files[0])
-    .then(res => {
+async function validatePlaylistData(files) {
+  axios({
+    method: 'POST',
+    url: '/api/import', 
+    data: files[0]
+  }).then(res => {
       console.log(res);
     }).catch(err => {
       console.log(err);
     })
 }
 
-const importButton = document.querySelector('input.file-import');
-importButton.addEventListener('change', validatePlaylistData, false);
+const fileInput = document.querySelector('input.file-import');
+fileInput.addEventListener('change', validatePlaylistData, false);
 
 function disable(e) {
   e.stopPropagation();
